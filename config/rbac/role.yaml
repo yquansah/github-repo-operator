@@ -1,0 +1,32 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: manager-role
+rules:
+- apiGroups:
+  - vcs.github
+  resources:
+  - gitrepositories
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - vcs.github
+  resources:
+  - gitrepositories/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - vcs.github
+  resources:
+  - gitrepositories/status
+  verbs:
+  - get
+  - patch
+  - update
