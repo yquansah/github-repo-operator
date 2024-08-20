@@ -18,12 +18,16 @@ package controller
 
 import (
 	"context"
+	"strconv"
 
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
+	"github.com/google/go-github/github"
 	"github.com/yquansah/github-operator/api/v1alpha1"
 	vcsv1alpha1 "github.com/yquansah/github-operator/api/v1alpha1"
 )
@@ -33,8 +37,10 @@ type GitRepositoryReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
 
-	GithubToken string
+	GithubClient *github.Client
 }
+
+const githubRepoFinalizer = "github-repo-finalizer"
 
 //+kubebuilder:rbac:groups=vcs.github,resources=gitrepositories,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=vcs.github,resources=gitrepositories/status,verbs=get;update;patch
@@ -60,9 +66,63 @@ func (r *GitRepositoryReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 
 	err := r.Get(ctx, req.NamespacedName, ghRepo)
 	if err != nil {
+		if errors.IsNotFound(err) {
+			return ctrl.Result{}, nil
+		}
+
+		return ctrl.Result{}, err
+	}
+
+	isGitHubRepoToBeDeleted := ghRepo.GetDeletionTimestamp() != nil
+	if isGitHubRepoToBeDeleted {
+		if controllerutil.ContainsFinalizer(ghRepo, githubRepoFinalizer) {
+			err = r.finalizeGithubRepo(ctx, ghRepo)
+			if err != nil {
+				return ctrl.Result{}, err
+			}
+			controllerutil.RemoveFinalizer(ghRepo, githubRepoFinalizer)
+			err := r.Update(ctx, ghRepo)
+			if err != nil {
+				return ctrl.Result{}, err
+			}
+		}
+	}
+
+	if !ghRepo.Status.Created {
+		repo, _, err := r.GithubClient.Repositories.Create(ctx, "", &github.Repository{
+			Name:        &ghRepo.Spec.Name,
+			Description: &ghRepo.Spec.Description,
+			Private:     &ghRepo.Spec.Private,
+		})
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+
+		ghRepo.Status.Created = true
+		ghRepo.Status.URL = repo.GetURL()
+		ghRepo.Status.ID = strconv.Itoa(int(repo.GetID()))
+
+		err = r.Status().Update(ctx, ghRepo)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
+	}
+
+	if !controllerutil.ContainsFinalizer(ghRepo, githubRepoFinalizer) {
+		controllerutil.AddFinalizer(ghRepo, githubRepoFinalizer)
+		err = r.Update(ctx, ghRepo)
+		if err != nil {
+			return ctrl.Result{}, err
+		}
 	}
 
 	return ctrl.Result{}, nil
+}
+
+func (r *GitRepositoryReconciler) finalizeGithubRepo(ctx context.Context, ghRepo *v1alpha1.GitRepository) error {
+	_, err := r.GithubClient.Repositories.Delete(ctx, "yquansah", ghRepo.Spec.Name)
+
+	return err
 }
 
 // SetupWithManager sets up the controller with the Manager.

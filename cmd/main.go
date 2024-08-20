@@ -17,13 +17,16 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"crypto/tls"
 	"errors"
 	"flag"
 	"os"
 
+	"github.com/google/go-github/github"
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
+	"golang.org/x/oauth2"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -133,10 +136,18 @@ func main() {
 		os.Exit(1)
 	}
 
+	ts := oauth2.StaticTokenSource(
+		&oauth2.Token{AccessToken: githubToken},
+	)
+
+	tc := oauth2.NewClient(context.Background(), ts)
+
+	githubClient := github.NewClient(tc)
+
 	if err = (&controller.GitRepositoryReconciler{
-		Client:      mgr.GetClient(),
-		Scheme:      mgr.GetScheme(),
-		GithubToken: githubToken,
+		Client:       mgr.GetClient(),
+		Scheme:       mgr.GetScheme(),
+		GithubClient: githubClient,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "GitRepository")
 		os.Exit(1)

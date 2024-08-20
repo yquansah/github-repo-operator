@@ -118,6 +118,8 @@ spec:
                   - type
                   type: object
                 type: array
+              created:
+                type: boolean
               id:
                 type: string
               url:
