@@ -14,7 +14,16 @@ spec:
     singular: gitrepository
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - description: The id of the Git repository
+      jsonPath: .status.id
+      name: ID
+      type: string
+    - description: The url of the Git repository
+      jsonPath: .status.url
+      name: URL
+      type: string
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: GitRepository is the Schema for the gitrepositories API
@@ -119,6 +128,9 @@ spec:
                   type: object
                 type: array
               created:
+                description: |-
+                  INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
+                  Important: Run "make" to regenerate code after modifying this file
                 type: boolean
               id:
                 type: string

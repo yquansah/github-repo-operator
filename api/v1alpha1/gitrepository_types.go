@@ -42,7 +42,6 @@ type GitRepositorySpec struct {
 type GitRepositoryStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
-
 	Created bool `json:"created,omitempty"`
 
 	ID string `json:"id,omitempty"`
@@ -57,6 +56,8 @@ type GitRepositoryStatus struct {
 //+kubebuilder:subresource:status
 
 // GitRepository is the Schema for the gitrepositories API
+// +kubebuilder:printcolumn:name="ID",type="string",JSONPath=".status.id",description="The id of the Git repository"
+// +kubebuilder:printcolumn:name="URL",type="string",JSONPath=".status.url",description="The url of the Git repository"
 type GitRepository struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
