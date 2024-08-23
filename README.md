@@ -1,22 +1,3 @@
-## Lesson Structure
-
-1. Ask about how many people code on a day-to-day basis
-   a) For those that do ask which language they use
-2. Explain why Golang is a important language to learn nowadays especially for CNCF tools
-   a) The tools are all written in Go
-   b) Because of the former point, you can hop into OS codebases to gain understanding of how the software works
-   c) If there are any bugs, you can even fork the project yourself and fix the bugs yourself. That also can be contributed upstream (brownie points)
-3. Explain how learning how to write code as a DevOps gives one so much power, and that you highly recommend they should learn
-4. Give brief overview of k8s operators and how they work
-   a) Kubernetes way of extending their API and functionality to developers
-   b) You can specify `CustomResources`, and controllers to manage them for reconciling whatever state you want
-   c) Whenever you create/delete something on k8s API server, controllers try to reconcile the state of the objects to the "reality of the world" (can be anything) _Give an example of the aws-lb-contrller_
-5. Show that operators are actually a leveraged pattern in native k8s
-   a) Show this example of the `Deployment` controller (https://github.com/kubernetes/kubernetes/blob/master/pkg/controller/deployment/deployment_controller.go)
-6. Show the `operator-sdk` docs and how it makes it pretty easy to create a custom controller with your custom resource
-7. Start to show the `git-repo-operator` and how I wrote a custom one using the `operator-sdk`
-   a) Interfaces with the GitHub API, and creates/destroys repositories
-
 ## Getting Started
 
 ### Prerequisites

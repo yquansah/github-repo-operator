@@ -99,7 +99,7 @@ func (r *GitRepositoryReconciler) Reconcile(ctx context.Context, req ctrl.Reques
 		}
 
 		ghRepo.Status.Created = true
-		ghRepo.Status.URL = repo.GetURL()
+		ghRepo.Status.URL = repo.GetGitURL()
 		ghRepo.Status.ID = strconv.Itoa(int(repo.GetID()))
 
 		err = r.Status().Update(ctx, ghRepo)
